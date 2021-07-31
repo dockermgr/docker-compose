@@ -1,10 +1,11 @@
-# 👋 Welcome to dockermgr templates 👋
+# Welcome to dockermgr docker-compose installer 👋
 
-### to install
+## to install
+
 ```shell
-dockermgr install template
+dockermgr install docker-compose
 ```  
+
 ## Author  
 
 👤 **Jason Hempstead**  
-
