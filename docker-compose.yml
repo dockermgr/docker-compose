@@ -1,15 +1,15 @@
 version: "3"
 services:
   app:
-    image: 'jc21/nginx-proxy-manager:latest'
+    image: "jc21/nginx-proxy-manager:latest"
     restart: always
     ports:
       # Public HTTP Port:
-      - '80:80'
+      - "80:80"
       # Public HTTPS Port:
-      - '443:443'
+      - "443:443"
       # Admin Web Port:
-      - '81:81'
+      - "81:81"
     environment:
       # These are the settings to access your db
       DB_MYSQL_HOST: "db"
@@ -23,18 +23,17 @@ services:
       # Uncomment this if IPv6 is not enabled on your host
       # DISABLE_IPV6: 'true'
     volumes:
-      - ./data:/data
-      - ./letsencrypt:/etc/letsencrypt
+      - REPLACE_DATADIR/data:/data
+      - REPLACE_DATADIR/letsencrypt:/etc/letsencrypt
     depends_on:
       - db
   db:
-    image: 'jc21/mariadb-aria:latest'
+    image: "jc21/mariadb-aria:latest"
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: 'db_password'
-      MYSQL_USER: 'db_username'
-      MYSQL_PASSWORD: 'db_password'
-      MYSQL_DATABASE: 'proxymanager'
+      MYSQL_ROOT_PASSWORD: "db_password"
+      MYSQL_USER: "db_username"
+      MYSQL_PASSWORD: "db_password"
+      MYSQL_DATABASE: "proxymanager"
     volumes:
       - ./data/mysql:/var/lib/mysql
-      
