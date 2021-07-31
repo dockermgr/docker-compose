@@ -59,6 +59,7 @@ if [ -f "$INSTDIR/docker-compose.yml" ]; then
   printf_blue "Installing containers using docker compose"
   sed -i "s|REPLACE_DATADIR|$DATADIR" "$INSTDIR/docker-compose.yml"
   if cd "$INSTDIR"; then
+    sudo docker rm "$APPNAME" -f &>/dev/null
     sudo docker-compose pull &>/dev/null
     sudo docker-compose up -d &>/dev/null
   fi
@@ -81,9 +82,9 @@ else
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if docker ps -a | grep -qs "$APPNAME"; then
-  printf_green "Successfully setup docker-compose"
+  true
 else
-  printf_return "Could not setup docker-compose"
+  false
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # End script
