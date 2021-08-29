@@ -66,7 +66,7 @@ APPVERSION="$(__appversion "$REPORAW/version.txt")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Setup plugins
 HUB_URL="template/template"
-SERVER_HOST="${APPNAME:-$(hostname -f 2>/dev/null)}"
+SERVER_HOST="$(hostname -f 2>/dev/null || echo "$SERVER_IP")"
 SERVER_PORT="${SERVER_PORT:-15050}"
 SERVER_PORT_INT="${SERVER_PORT_INT:-80}"
 SERVER_PORT_SSL="${SERVER_PORT_SSL:-15100}"
@@ -117,6 +117,7 @@ fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Copy over data files - keep the same stucture as -v dataDir/mnt:/mount
 if [[ -d "$INSTDIR/dataDir" ]] && [[ ! -f "$DATADIR/.installed" ]]; then
+  printf_blue "Copying files to $DATADIR"
   cp -Rf "$INSTDIR/dataDir/." "$DATADIR/"
   touch "$DATADIR/.installed"
 fi
@@ -140,8 +141,8 @@ else
     --restart=unless-stopped \
     --privileged \
     -e TZ="$SERVER_TIMEZONE" \
-    -v "$DATADIR/data":/data:z \
-    -v "$DATADIR/config":/config:z \
+    -v "$DATADIR/data":/data \
+    -v "$DATADIR/config":/config \
     -p $SERVER_IP:$SERVER_PORT:$SERVER_PORT_INT \
     "$HUB_URL" &>/dev/null
 fi
@@ -149,6 +150,7 @@ fi
 # Install nginx proxy
 if [[ ! -f "/etc/nginx/vhosts.d/$APPNAME.conf" ]] && [[ -f "$APPDIR/nginx/proxy.conf" ]]; then
   if __port_not_in_use "$SERVER_PORT"; then
+    printf_green "Copying the nginx configuration"
     __sudo_root cp -Rf "$APPDIR/nginx/proxy.conf" "/etc/nginx/vhosts.d/$APPNAME.conf"
     sed -i "s|REPLACE_APPNAME|$APPNAME|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
     sed -i "s|REPLACE_SERVER_HOST|$SERVER_HOST|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
