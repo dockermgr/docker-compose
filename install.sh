@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-APPNAME="docker-compose"
+APPNAME="TEMPLATE"
 USER="${SUDO_USER:-${USER}}"
 HOME="${USER_HOME:-${HOME}}"
 SRC_DIR="${BASH_SOURCE%/*}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Set bash options
 if [[ "$1" == "--debug" ]]; then shift 1 && set -xo pipefail && export SCRIPT_OPTS="--debug" && export _DEBUG="on"; fi
-echo Template && exit
+echo -e "\t\tTemplate" && exit 1
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ##@Version       : 202108282020-git
 # @Author        : Jason Hempstead
 # @Contact       : jason@casjaysdev.com
 # @License       : WTFPL
-# @ReadME        : docker-compose --help
+# @ReadME        : TEMPLATE --help
 # @Copyright     : Copyright: (c) 2021 Jason Hempstead, Casjays Developments
 # @Created       : Saturday, Aug 28, 2021 20:20 EDT
-# @File          : docker-compose
-# @Description   : 
-# @TODO          : 
-# @Other         : 
-# @Resource      : 
+# @File          : TEMPLATE
+# @Description   :
+# @TODO          :
+# @Other         :
+# @Resource      :
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Import functions
 CASJAYSDEVDIR="${CASJAYSDEVDIR:-/usr/local/share/CasjaysDev/scripts}"
@@ -54,11 +54,11 @@ scripts_check
 REPO_BRANCH="${GIT_REPO_BRANCH:-master}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Defaults
-APPNAME="docker-compose"
-APPDIR="$HOME/.local/share/docker/docker-compose"
-DATADIR="$HOME/.local/share/docker/docker-compose/files"
-INSTDIR="$HOME/.local/share/dockermgr/docker/docker-compose"
-REPO="${DOCKERMGRREPO:-https://github.com/dockermgr}/docker-compose"
+APPNAME="TEMPLATE"
+APPDIR="$HOME/.local/share/docker/TEMPLATE"
+DATADIR="$HOME/.local/share/docker/TEMPLATE/files"
+INSTDIR="$HOME/.local/share/dockermgr/docker/TEMPLATE"
+REPO="${DOCKERMGRREPO:-https://github.com/dockermgr}/TEMPLATE"
 REPORAW="$REPO/raw/$REPO_BRANCH"
 APPVERSION="$(__appversion "$REPORAW/version.txt")"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -131,27 +131,27 @@ else
   fi
   if __enable_ssl && __ssl_certs "$SERVER_SSL_CRT" "$SERVER_SSL_KEY"; then
     ## SSL
-  __sudo docker run -d \
-    --name="$APPNAME" \
-    --hostname "$SERVER_HOST" \
-    --restart=unless-stopped \
-    --privileged \
-    -e TZ="$SERVER_TIMEZONE" \
-    -v "$DATADIR/data":/data:z \
-    -v "$DATADIR/config":/config:z \
-    -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
-    "$HUB_URL" &>/dev/null
+    __sudo docker run -d \
+      --name="$APPNAME" \
+      --hostname "$SERVER_HOST" \
+      --restart=unless-stopped \
+      --privileged \
+      -e TZ="$SERVER_TIMEZONE" \
+      -v "$DATADIR/data":/data:z \
+      -v "$DATADIR/config":/config:z \
+      -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
+      "$HUB_URL" &>/dev/null
   else
-  __sudo docker run -d \
-    --name="$APPNAME" \
-    --hostname "$SERVER_HOST" \
-    --restart=unless-stopped \
-    --privileged \
-    -e TZ="$SERVER_TIMEZONE" \
-    -v "$DATADIR/data":/data:z \
-    -v "$DATADIR/config":/config:z \
-    -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
-    "$HUB_URL" &>/dev/null
+    __sudo docker run -d \
+      --name="$APPNAME" \
+      --hostname "$SERVER_HOST" \
+      --restart=unless-stopped \
+      --privileged \
+      -e TZ="$SERVER_TIMEZONE" \
+      -v "$DATADIR/data":/data:z \
+      -v "$DATADIR/config":/config:z \
+      -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
+      "$HUB_URL" &>/dev/null
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
