@@ -46,8 +46,10 @@ user_installdirs
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Define extra functions
 __sudo() { if sudo -n true; then eval sudo "$*"; else eval "$*"; fi; }
-__enable_ssl() { [[ "$SERVER_SSL" = "yes" ]] && [[ "$SERVER_SSL" = "true" ]] && return 0 || return 1; }
+__sudo_root() { sudo -n true && ask_for_password true && eval sudo "$*" || return 1; }
 __ssl_certs() { [ -f "${1:-$SERVER_SSL_CRT}" ] && [ -f "${2:-SERVER_SSL_KEY}" ] && return 0 || return 1; }
+__enable_ssl() { { [[ "$SERVER_SSL" = "yes" ]] || [[ "$SERVER_SSL" = "true" ]]; } && return 0 || return 1; }
+__port_not_in_use() { [[ -d "/etc/nginx/vhosts.d" ]] && grep -Rsq "${1:-$SERVER_PORT}" /etc/nginx/vhosts.d && return 0 || return 1; }
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Make sure the scripts repo is installed
 scripts_check
@@ -55,9 +57,9 @@ REPO_BRANCH="${GIT_REPO_BRANCH:-master}"
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Defaults
 APPNAME="TEMPLATE"
-APPDIR="$HOME/.local/share/docker/TEMPLATE"
-DATADIR="$HOME/.local/share/docker/TEMPLATE/files"
-INSTDIR="$HOME/.local/share/dockermgr/docker/TEMPLATE"
+APPDIR="$HOME/.local/share/srv/docker/TEMPLATE"
+DATADIR="$HOME/.local/share/srv/docker/TEMPLATE/files"
+INSTDIR="$HOME/.local/share/dockermgr/TEMPLATE"
 REPO="${DOCKERMGRREPO:-https://github.com/dockermgr}/TEMPLATE"
 REPORAW="$REPO/raw/$REPO_BRANCH"
 APPVERSION="$(__appversion "$REPORAW/version.txt")"
@@ -114,7 +116,10 @@ if am_i_online; then
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Copy over data files - keep the same stucture as -v dataDir/mnt:/mount
-[[ -d "$INSTDIR/dataDir" ]] && cp -Rf "$INSTDIR/dataDir/*" "$DATADIR/"
+if [[ -d "$INSTDIR/dataDir" ]] && [[ ! -f "$DATADIR/.installed" ]]; then
+  cp -Rf "$INSTDIR/dataDir/." "$DATADIR/"
+  touch "$DATADIR/.installed"
+fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Main progam
 if [ -f "$INSTDIR/docker-compose.yml" ] && cmd_exists docker-compose; then
@@ -129,29 +134,26 @@ else
     __sudo docker stop "$APPNAME" &>/dev/null
     __sudo docker rm -f "$APPNAME" &>/dev/null
   fi
-  if __enable_ssl && __ssl_certs "$SERVER_SSL_CRT" "$SERVER_SSL_KEY"; then
-    ## SSL
-    __sudo docker run -d \
-      --name="$APPNAME" \
-      --hostname "$SERVER_HOST" \
-      --restart=unless-stopped \
-      --privileged \
-      -e TZ="$SERVER_TIMEZONE" \
-      -v "$DATADIR/data":/data:z \
-      -v "$DATADIR/config":/config:z \
-      -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
-      "$HUB_URL" &>/dev/null
-  else
-    __sudo docker run -d \
-      --name="$APPNAME" \
-      --hostname "$SERVER_HOST" \
-      --restart=unless-stopped \
-      --privileged \
-      -e TZ="$SERVER_TIMEZONE" \
-      -v "$DATADIR/data":/data:z \
-      -v "$DATADIR/config":/config:z \
-      -p $TEMPLATE_SERVER_PORT:$SERVER_PORT_INT \
-      "$HUB_URL" &>/dev/null
+  __sudo docker run -d \
+    --name="$APPNAME" \
+    --hostname "$SERVER_HOST" \
+    --restart=unless-stopped \
+    --privileged \
+    -e TZ="$SERVER_TIMEZONE" \
+    -v "$DATADIR/data":/data:z \
+    -v "$DATADIR/config":/config:z \
+    -p $SERVER_IP:$SERVER_PORT:$SERVER_PORT_INT \
+    "$HUB_URL" &>/dev/null
+fi
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# Install nginx proxy
+if [[ ! -f "/etc/nginx/vhosts.d/$APPNAME.conf" ]] && [[ -f "$APPDIR/nginx/proxy.conf" ]]; then
+  if __port_not_in_use "$SERVER_PORT"; then
+    __sudo_root cp -Rf "$APPDIR/nginx/proxy.conf" "/etc/nginx/vhosts.d/$APPNAME.conf"
+    sed -i "s|REPLACE_APPNAME|$APPNAME|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
+    sed -i "s|REPLACE_SERVER_HOST|$SERVER_HOST|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
+    sed -i "s|REPLACE_SERVER_PORT|$SERVER_PORT|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
+    __sudo_root systemctl reload nginx
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -169,7 +171,8 @@ dockermgr_install_version
 if docker ps -a | grep -qs "$APPNAME"; then
   printf_blue "DATADIR in $DATADIR"
   printf_cyan "Installed to $INSTDIR"
-  printf_blue "Service is available at: http://$SERVER_HOST:$SERVER_PORT"
+  printf_blue "Service is running on: $SERVER_IP:$SERVER_PORT"
+  printf_blue "and should be available at: $SERVER_HOST:$SERVER_PORT"
 else
   printf_error "Something seems to have gone wrong with the install"
 fi
