@@ -155,7 +155,7 @@ if [[ ! -f "/etc/nginx/vhosts.d/$APPNAME.conf" ]] && [[ -f "$APPDIR/nginx/proxy.
     sed -i "s|REPLACE_APPNAME|$APPNAME|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
     sed -i "s|REPLACE_SERVER_HOST|$SERVER_HOST|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
     sed -i "s|REPLACE_SERVER_PORT|$SERVER_PORT|g" "/etc/nginx/vhosts.d/$APPNAME.conf"
-    __sudo_root systemctl reload nginx
+    __sudo_root systemctl reload nginx &>/dev/null
   fi
 fi
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -170,6 +170,8 @@ execute "run_postinst" "Running post install scripts"
 dockermgr_install_version
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # run exit function
+run_exit
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 if docker ps -a | grep -qs "$APPNAME"; then
   printf_blue "DATADIR in $DATADIR"
   printf_cyan "Installed to $INSTDIR"
@@ -178,7 +180,6 @@ if docker ps -a | grep -qs "$APPNAME"; then
 else
   printf_error "Something seems to have gone wrong with the install"
 fi
-run_exit
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # End application
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
