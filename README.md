@@ -32,7 +32,7 @@ git clone <https://github.com/dockermgr/TEMPLATE> "$HOME/.local/share/CasjaysDev
 
 cp -Rfva "$HOME/.local/share/srv/docker/TEMPLATE/dataDir/." "$HOME/.local/share/srv/docker/TEMPLATE/"
 
-cd "$HOME/.local/share/srv/docker/TEMPLATE/" && docker-compose -d
+cd "$HOME/.local/share/srv/docker/TEMPLATE/" && __sudo docker-compose -d
 
 ```
 
